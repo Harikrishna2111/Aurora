@@ -28,11 +28,15 @@ for img_left, img_right in zip(images_left, images_right):
     imgL = cv2.imread(img_left)
     imgR = cv2.imread(img_right)
 
-    retL, cornersL, grayL= find_corners(imgL)
-    retR, cornersR, grayR= find_corners(imgR)
-
+    retL, cornersL, grayL = find_corners(imgL)
+    retR, cornersR, grayR = find_corners(imgR)
 
     if retL and retR:
+        # Check the number of corners detected
+        if len(cornersL) < chessboard_size[0] * chessboard_size[1] or len(cornersR) < chessboard_size[0] * chessboard_size[1]:
+            print(f"Insufficient corners detected in images {img_left} and {img_right}.")
+            continue
+
         objpoints.append(objp)
 
         # Refine corner locations
@@ -55,6 +59,12 @@ cv2.destroyAllWindows()
 retL, mtxL, distL, rvecsL, tvecsL = cv2.calibrateCamera(objpoints, imgpoints_left, grayL.shape[::-1], None, None)
 retR, mtxR, distR, rvecsR, tvecsR = cv2.calibrateCamera(objpoints, imgpoints_right, grayR.shape[::-1], None, None)
 
+# Print camera matrices and distortion coefficients
+print("Camera Matrix Left:\n", mtxL)
+print("Distortion Coefficients Left:\n", distL)
+print("Camera Matrix Right:\n", mtxR)
+print("Distortion Coefficients Right:\n", distR)
+
 # Stereo calibration (find extrinsic parameters)
 retval, cameraMatrixL, distCoeffsL, cameraMatrixR, distCoeffsR, R, T, E, F = cv2.stereoCalibrate(
     objpoints, imgpoints_left, imgpoints_right, mtxL, distL, mtxR, distR, grayL.shape[::-1],
@@ -64,6 +74,9 @@ retval, cameraMatrixL, distCoeffsL, cameraMatrixR, distCoeffsR, R, T, E, F = cv2
 rectify_scale = 1  # 0: crop, 1: keep full size
 R1, R2, P1, P2, Q, validPixROI1, validPixROI2 = cv2.stereoRectify(
     cameraMatrixL, distCoeffsL, cameraMatrixR, distCoeffsR, grayL.shape[::-1], R, T, alpha=rectify_scale)
+
+# Check Q matrix validity
+print("Q matrix:\n", Q)
 
 # Save the calibration results
 np.savez('stereo_calib.npz', cameraMatrixL=cameraMatrixL, distCoeffsL=distCoeffsL,

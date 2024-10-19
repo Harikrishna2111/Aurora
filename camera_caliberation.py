@@ -1,10 +1,11 @@
 import cv2
 import numpy as np
 import glob
+from corner_finder import find_corners
 
 # Chessboard dimensions
-chessboard_size = (13, 8)
-square_size = 1.8  # Change this to the size of a square on your chessboard in real-world units
+chessboard_size = (7, 7)
+square_size = 2  # Change this to the size of a square on your chessboard in real-world units
 
 # Termination criteria for corner refinement
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -26,12 +27,10 @@ images_right = glob.glob('D:/Projects/Aurora/right/*.png')  # Change to your ima
 for img_left, img_right in zip(images_left, images_right):
     imgL = cv2.imread(img_left)
     imgR = cv2.imread(img_right)
-    grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
-    grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
 
-    # Find chessboard corners
-    retL, cornersL = cv2.findChessboardCorners(grayL, chessboard_size, None)
-    retR, cornersR = cv2.findChessboardCorners(grayR, chessboard_size, None)
+    retL, cornersL, grayL= find_corners(imgL)
+    retR, cornersR, grayR= find_corners(imgR)
+
 
     if retL and retR:
         objpoints.append(objp)
